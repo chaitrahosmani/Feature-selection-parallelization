@@ -1,0 +1,72 @@
+---
+title: "Subset Selection Linear programming"
+author: "Chaitra Hosmani"
+date: "December 10, 2018"
+output: html_document
+---
+
+```{r cars}
+#Subset selection linear programming
+start_time <-Sys.time()
+
+N=12  # number of features to be choosen
+x=names(sample_data)[1:N]
+k=1
+models=list()
+Error=c()
+best_model=c()
+
+for(k in 1:N)
+{
+  # finding all possible combinations for given k
+    combinations=matrix()
+    combinations=combn(x, k) 
+    all_comb = dim(combinations)[2]
+    i=1
+    best_model=0
+    min_adj_r_sq =-9999999999;
+    # loop through all the combinations of k
+    for(i in 1:all_comb)
+    {
+        independent_var= combinations[,i]  
+        j=1
+        lm_arg=""
+        # create lm argument by looping through all the varibale of a given combination
+        for(j in 1:k)
+        {
+            if(lm_arg != "")
+            {
+                lm_arg = paste(lm_arg, paste0("sample_data$", independent_var[j]), sep="+")
+            }
+            else
+            {
+                # when combination has only one variable
+                lm_arg = paste0("sample_data$",independent_var[j] )
+            }
+
+        }
+        # add the dependent variable to lm_arg
+        lm_arg = paste0("sample_data$y~", lm_arg)
+
+   
+    # call the linear model function and adjusted R Square
+    cur_adjr_sq = summary(lm(as.formula(lm_arg), data=sample_data))$adj.r.squared
+    if(cur_adjr_sq > min_adj_r_sq)
+    {
+
+        best_model = i
+        min_adj_r_sq = cur_adjr_sq
+    }
+  }  # end of all combinations for given k (i)
+  print(combinations[,best_model])
+}  # end of all k
+end_time <-Sys.time()
+# Total execution time
+end_time - start_time
+
+```
+
+```{r}
+
+```
+

@@ -1,0 +1,73 @@
+---
+title: "Subset Selection Parallel Programming"
+author: "Chaitra Hosmani"
+date: "December 16, 2018"
+output: html_document
+---
+
+```{r cars}
+# subset selection: parallel: Dec 13th, 2018
+
+library(foreach)
+library(doParallel)
+# initializing the start time
+start_time <-Sys.time()
+# initializing number of cores
+no_cores <- detectCores() - 1
+cl <- makeCluster(no_cores)
+registerDoParallel(cl)
+
+N=3   # number of features to be choosen
+x=names(sample_data)[1:N]
+k=1
+models=list()
+best_model=c()
+
+foreach(k = 1:N) %dopar%  
+{
+    combinations=matrix()    # resetting the combinations for each round of k
+    combinations=combn(x, k) 
+    all_comb = dim(combinations)[2]
+    i=1
+    # loop through all the combinations of k
+    for(i in 1:all_comb)
+    {
+        min_adj_r_sq =-9999999999;
+        independent_var= combinations[,i]  
+        j=1
+        lm_arg=""
+         # create lm argument by looping through all the varibale of a given combination
+        for(j in 1:k)
+        {
+          if(lm_arg != "")
+          {
+            lm_arg = paste(lm_arg, paste0("sample_data$", independent_var[j]), sep="+")
+          }
+          else
+          {
+            # when combination has only one variable
+            lm_arg = paste0("sample_data$",independent_var[j] )
+          }
+
+        }
+      # add the dependent variable to lm_arg
+      lm_arg = paste0("sample_data$y~", lm_arg)
+     
+      # call the linear model function and adjusted R Square
+      cur_adjr_sq = summary(lm(as.formula(lm_arg), data=sample_data))$adj.r.squared
+      if(cur_adjr_sq > min_adj_r_sq)
+      {
+        best_model = i
+        min_adj_r_sq = cur_adjr_sq
+      }
+         
+  }  # end of all combinations for given k (i)
+  print(combinations[,best_model])
+}  # end of all k
+
+on.exit(stopCluster(cl))
+end_time <-Sys.time()
+# Total execution time
+end_time - start_time
+```
+
